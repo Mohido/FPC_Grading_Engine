@@ -12,10 +12,7 @@ cSheetsPathsPrs = [
     "res/2022-01-10T1611_Grades-2021_22_1_IP-18fFUNPEG_3_-_Functional_programming_L+Pr..csv"
 ]
 
-cSheetPathsLts = [ 
-    "res/2022-01-10T1612_Grades-2021_22_1_IP-18fFUNPEG_90_-_Functional_programming_L+Pr..csv",
-    "res/2022-01-10T1613_Grades-2021_22_1_IP-18fFUNPEG_91_-_Functional_programming_L+Pr..csv"
-]
+
 
 
 renamePatterns = [
@@ -25,7 +22,19 @@ renamePatterns = [
 ]
 
 
-
+cSheetPathsLts = [ 
+    "res/2022-01-10T1612_Grades-2021_22_1_IP-18fFUNPEG_90_-_Functional_programming_L+Pr..csv",
+    "res/2022-01-10T1613_Grades-2021_22_1_IP-18fFUNPEG_91_-_Functional_programming_L+Pr..csv"
+]
+lectureRenamePatterns = [
+    (r"^Mid-term.*", "Mid-term-quiz"),
+    (r"^Endterm Quiz.*", "End-term-quiz"),
+    (r"^Big_Quiz_Retake.*", "Big_Quiz_Retake"),
+    (r".*SIS.*", "neptun-code"),
+    (r"^Student", "full-name"),
+    (r"^Quiz_Extra.*", "Quiz-extra")
+] + [ (re.compile("^Quiz" + str(x)), "Quiz-" + str(x)) for x in range(1,10)]
+lectureUseCols = [0,1,2] + [x for x in range(4,17)]
 
 # ________________
 conf = {
@@ -43,6 +52,13 @@ conf = {
         "usecols" :              [0,1,2,4],
         "columnAsId":            "ID"     
     },
+
+    "CanvasLecConf" : {                
+        "paths"  :               cSheetPathsLts,             
+        "renamePatterns":        lectureRenamePatterns, 
+        "usecols" :              lectureUseCols,
+        "columnAsId":            "ID"     
+    },
 }
 
 
@@ -50,9 +66,14 @@ conf = {
 
 engine = FPCG_Engine(conf)
 engine.start()
-df = engine.getCanvasLabData()
+df = engine.getCanvasLecData()
 
+print("______________________________")
 print(df.info())
+print("______________________________")
 print(df.head())
+print("______________________________")
 print(df.describe())
+print("______________________________")
 print(df.shape)
+print("______________________________")
