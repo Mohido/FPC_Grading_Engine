@@ -5,7 +5,7 @@
 from fpcg_utils import *
 import pandas as pd
 import numpy as np
-
+import math
 '''
 
 Configuration struct....
@@ -240,8 +240,10 @@ class FPCG_Engine(object):
     ''''''
     def _fill_progress_task_column(self):
 
-        # progress_task_max_score = 100
+        per_progress_score = 100
         progress_task_passing_score = 50
+
+
         stdPtColumn = searchList(re.compile(".*[Pp]rogress.*[Tt]ask.*"), list(self.m_studentsResults.columns))[0]
         neptun_code_col = searchList(re.compile(".*[Nn]eptun.*"), list(self.m_studentsResults.columns))[0]
         for stdInd, studentRow in self.m_studentsResults.iterrows():
@@ -264,8 +266,9 @@ class FPCG_Engine(object):
             # Calculating the passed progress tasks.
             passed_tasks = 0
             for pt_col in progress_tasks_columns:
-                if gradeRow[pt_col] > progress_task_passing_score:
-                    passed_tasks += 1
+                ratio = (gradeRow[pt_col] / per_progress_score)
+                if ratio > progress_task_passing_ratio / 100:
+                    passed_tasks += int(ratio)
             passed_tasks = min(passed_tasks, 10) * 10    # Clamping to 10 tasks maximum.
 
             logMessage("INFO", "_fill_progress_task_column", f"{neptun_code}: Passed Progress Tasks Percentage: {passed_tasks}%")
