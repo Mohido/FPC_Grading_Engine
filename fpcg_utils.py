@@ -89,6 +89,9 @@ def searchList(pattern, columns):
 
 
 
+
+
+
 def printDetails(dataframe):
     print("--------- Head --------------------")
     print(dataframe.head())
@@ -102,6 +105,10 @@ def printDetails(dataframe):
     print("--------- Maximums: Strings output are irrelevant. --------------------")
     print(dataframe.max())
     print("---------------------------------- ")
+
+
+
+
 
 
 def logMessage(mtype, functionName, message):

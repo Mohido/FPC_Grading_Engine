@@ -77,8 +77,8 @@ class FPCG_Engine(object):
             ("Passed Quizes Percentage", self._fill_quizes_column), 
             ("Midterm Exam Percentage", self._fill_practice_exams_columns),
             ("Endterm Exam Percentage", None), # loaded withen the midterm percentage initializer.
-            ("Progress Tasks Percentage",self._fill_progress_task_column),
-            ("Homeworks Percentage", None),
+            ("Passed Progress Tasks Percentage",self._fill_progress_task_column),
+            ("Homeworks Percentage", self._fill_homework_column),
             ("Final Grade", None)
         ]
 
@@ -195,7 +195,7 @@ class FPCG_Engine(object):
 
     ''''''
     def _fill_practice_exams_columns(self):
-         # Filling the students quizes data
+        # Filling the students quizes data
         neptun_code_col = searchList(re.compile(".*[Nn]eptun.*"), list(self.m_studentsResults.columns))[0]
         stdMidtermColumn = searchList(re.compile(".*[Mm]id.*term.*"), list(self.m_studentsResults.columns))[0]
         stdEndtermColumn = searchList(re.compile(".*[Ee]nd.*term.*"), list(self.m_studentsResults.columns))[0]
@@ -213,7 +213,7 @@ class FPCG_Engine(object):
             
             midterm_columns = searchList(re.compile("^[Mm]id.*term.*"), list(df.columns))
             midterm_scores = list(df.loc[neptun_code][midterm_columns])
-            bestMidterm = np.max(midterm_scores)
+            bestMidterm = min(np.max(midterm_scores), 100)  # clamping to 100
             self.m_studentsResults.loc[stdInd][stdMidtermColumn] = bestMidterm
 
             logMessage("INFO", "_fill_practice_exams_columns", f"Midterm columns are: {midterm_columns}")
@@ -221,7 +221,7 @@ class FPCG_Engine(object):
 
             endterm_columns = searchList(re.compile("^[Ee]nd.*term.*"), list(df.columns))
             endterm_scores = list(df.loc[neptun_code][endterm_columns])
-            bestEndterm = np.max(endterm_scores)
+            bestEndterm = min(np.max(endterm_scores) , 100) # clamping to 100
             self.m_studentsResults.loc[stdInd][stdEndtermColumn] = bestEndterm
 
             logMessage("INFO", "_fill_practice_exams_columns", f"Endterm columns are: {endterm_columns}")
@@ -251,7 +251,7 @@ class FPCG_Engine(object):
             gradeRow = df.loc[neptun_code]
 
             # Processing the progress task score of the student.
-            progress_tasks_columns = searchList(re.compile("^progress.*task.*", re.IGNORECASE), list(df.columns))           
+            progress_tasks_columns = searchList(re.compile("^progress.*task.*", re.IGNORECASE), list(df.columns))
             logMessage("INFO", "_fill_progress_task_column", f"{neptun_code}: Progress Tasks columns are:\n\t{progress_tasks_columns}")
             temp = str(list(gradeRow[progress_tasks_columns]))
             logMessage("INFO", "_fill_progress_task_column", f"{neptun_code}: Progress Tasks Results are:\n\t{temp}")
@@ -262,8 +262,58 @@ class FPCG_Engine(object):
                 if gradeRow[pt_col] > progress_task_passing_score:
                     passed_tasks += 1
             passed_tasks = min(passed_tasks, 10) * 10    # Clamping to 10 tasks maximum.
+
             logMessage("INFO", "_fill_progress_task_column", f"{neptun_code}: Passed Progress Tasks Percentage: {passed_tasks}%")
             self.m_studentsResults.loc[stdInd][stdPtColumn] = passed_tasks 
+
+
+    ''''''
+    def _fill_homework_column(self):
+        hw_score = 100
+        stdHwColumn = searchList(re.compile(".*[Hh]omework.*"), list(self.m_studentsResults.columns))[0]
+        neptun_code_col = searchList(re.compile(".*[Nn]eptun.*"), list(self.m_studentsResults.columns))[0]
+        for stdInd, studentRow in self.m_studentsResults.iterrows():
+            neptun_code = studentRow[neptun_code_col]
+            logMessage("INFO", "_fill_homework_column", f"Processing Student Homeworks: {neptun_code} ...")
+            
+            # Searching for the right teams sheet
+            (i, df) = searchTables(neptun_code, self.m_teams_dfs)
+            if( i == None):
+                logMessage("WARNGING", "_fill_homework_column", f"Student: {neptun_code} has no MS teams data.")
+                # raise Exception(f'No student with id: {neptun_code} is NOT found in the MS teams files...')
+                continue
+            gradeRow = df.loc[neptun_code]
+
+            # Processing the progress task score of the student.
+            homework_columns = searchList(re.compile("^homework.*", re.IGNORECASE), list(df.columns))
+            homework_extra_columns = searchList(re.compile(".*extra.*", re.IGNORECASE), homework_columns)
+            homework_main_columns =  [el for el in homework_columns if el not in homework_extra_columns]
+
+            logMessage("INFO", "_fill_homework_column", f"{neptun_code}: Main Homework columns: {homework_main_columns}")
+            logMessage("INFO", "_fill_homework_column", f"{neptun_code}: Extra Homework columns: {homework_extra_columns}")
+
+            # getting the student scores of the main hws and extra ones.
+            mainScores = list(gradeRow[homework_main_columns])
+            extraScores = list(gradeRow[homework_extra_columns])
+
+            logMessage("INFO", "_fill_homework_column", f"{neptun_code}: Main Homework scores: {mainScores}")
+            logMessage("INFO", "_fill_homework_column", f"{neptun_code}: Extra Homework scores: {extraScores}")
+
+            for (j, e_scr) in enumerate(extraScores):
+                if(e_scr > min(mainScores)):
+                    ind = np.argmin(mainScores)
+                    mainScores[ind] = e_scr
+
+            percentage = (sum(mainScores) / (len(mainScores)*hw_score)) * 100
+            
+            logMessage("INFO", "_fill_homework_column", f"{neptun_code}: Final Main Score: {mainScores}")
+            logMessage("INFO", "_fill_homework_column", f"{neptun_code}: Percentage: {percentage}%")
+
+            self.m_studentsResults.loc[stdInd][stdHwColumn] = percentage 
+
+                
+
+
 
 
 
