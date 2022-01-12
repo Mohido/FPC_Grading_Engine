@@ -58,7 +58,11 @@ teamsRenamePatterns = [
     (re.compile("^homework.*11", re.IGNORECASE),                "Homework-extra-1"),
     (re.compile("^homework.*12", re.IGNORECASE),                "Homework-extra-2"),
     (re.compile("^extra.*progress.*task.*", re.IGNORECASE),     "Progress-task-extra-1"),
+    (re.compile("^exrtra.*progress.*task.*", re.IGNORECASE),    "Progress-task-extra-1"),
     (re.compile(".*progress.*task.*extra.*", re.IGNORECASE),    "Progress-task-extra-1"),
+    (re.compile("Extra homework 2", re.IGNORECASE),             "Homework-extra-2"),
+    (re.compile("Extra homework", re.IGNORECASE),               "Homework-extra-1"),
+    (re.compile("^Progress Task $", re.IGNORECASE),             "Progress-task-1"),
     ] + [
         (re.compile(".*red.*dots.*" + str(x) +"[a-z ]*$", re.IGNORECASE), "Red-dots-" + str(x)) for x in range(1,3)
     ] + [
@@ -75,7 +79,7 @@ teamsUseCols = []
 conf = {
     "MSTeamsConf" : 
         { 
-            "paths" : ["res/FP Practice Gr 5. Wed 8.30-10 a.m. 2-107 marks - 11-01-2022, 13-05.csv"],
+            "paths" : teamsSheetPaths,
             "renamePatterns" : teamsRenamePatterns,
             "usecols" : teamsUseCols,
             "columnAsId" : "Email Address"
@@ -117,4 +121,4 @@ print(df.shape)
 print("______________________________")
 
 
-engine.run()
+#engine.run()

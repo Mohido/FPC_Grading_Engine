@@ -212,7 +212,7 @@ class FPCG_Engine(object):
             
             if( i == None):
                 logMessage("WARNGING", "_fill_practice_exams_columns", f"Student: {neptun_code} has no MS teams data.")
-            #     raise Exception(f'No student with id: {neptun_code} is NOT found in the MS teams files...')
+                # raise Exception(f'No student with id: {neptun_code} is NOT found in the MS teams files...')
                 continue
             logMessage("INFO", "_fill_practice_exams_columns", f"Found Student Teams Dataframe: {neptun_code} Belongs to dataframe: {i}")
             
@@ -241,7 +241,7 @@ class FPCG_Engine(object):
     def _fill_progress_task_column(self):
 
         per_progress_score = 100
-        progress_task_passing_score = 50
+        progress_task_passing_ratio = 50
 
 
         stdPtColumn = searchList(re.compile(".*[Pp]rogress.*[Tt]ask.*"), list(self.m_studentsResults.columns))[0]
@@ -407,14 +407,13 @@ class FPCG_Engine(object):
             t_conf["renamePatterns"]
         )]
         for path in tsps[1:]:
-            teams_dfs = teams_dfs.append(
-                loadDataFrame_teams_ext(
-                    path,
-                    t_conf["columnAsId"], 
-                    t_conf["usecols"],
-                    t_conf["renamePatterns"]
-                )
-            )
+            teams_dfs = teams_dfs + [loadDataFrame_teams_ext(
+                                        path,
+                                        t_conf["columnAsId"], 
+                                        t_conf["usecols"],
+                                        t_conf["renamePatterns"]
+                                    )]
+            
 
         return teams_dfs
 
