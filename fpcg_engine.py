@@ -51,7 +51,7 @@ class FPCG_Engine(object):
     def start(self):
         self.m_teams_dfs = self._load_teams_data()
         self.m_cvLab_df = self._load_canvas_lab_data()
-        self.m_cvLec_df = self._load_canvas_lab_data()
+        self.m_cvLec_df = self._load_canvas_lec_data()
 
     # -- Getters
     def getTeamsData(self, index):
@@ -74,6 +74,7 @@ class FPCG_Engine(object):
             ("Neptun Code", self._fill_neptun_column),
             ("Fullname", self._fill_name_column), 
             ("Theory Percentage", self._fill_theory_column),
+            ("Red Dots", self._fill_red_dot_column),
             ("Passed Quizes Percentage", self._fill_quizes_column), 
             ("Midterm Exam Percentage", self._fill_practice_exams_columns),
             ("Endterm Exam Percentage", None), # loaded withen the midterm percentage initializer.
@@ -90,9 +91,7 @@ class FPCG_Engine(object):
                 initializer()
 
         printDetails(self.m_studentsResults)
-
-
-
+        self.m_studentsResults.to_csv("./output/result.csv")
 
 
 
@@ -115,7 +114,6 @@ class FPCG_Engine(object):
         fullnameColumnName = searchList(re.compile("[Ff]ull.*[Nn]ame.*"), list(self.m_cvLec_df.columns))[0]
         self.m_studentsResults["Fullname"] = self.m_cvLec_df[fullnameColumnName]
         print("---------------------------------- Done  ")
-
 
 
     '''
@@ -198,7 +196,8 @@ class FPCG_Engine(object):
 
 
 
-    ''''''
+    '''
+    '''
     def _fill_practice_exams_columns(self):
         # Filling the students quizes data
         neptun_code_col = searchList(re.compile(".*[Nn]eptun.*"), list(self.m_studentsResults.columns))[0]
@@ -237,7 +236,8 @@ class FPCG_Engine(object):
 
 
 
-    ''''''
+    '''
+    '''
     def _fill_progress_task_column(self):
 
         per_progress_score = 100
@@ -273,9 +273,47 @@ class FPCG_Engine(object):
 
             logMessage("INFO", "_fill_progress_task_column", f"{neptun_code}: Passed Progress Tasks Percentage: {passed_tasks}%")
             self.m_studentsResults.loc[stdInd][stdPtColumn] = passed_tasks 
+    
+    '''
+    '''
+    def _fill_red_dot_column(self):
+        print("------------------ FILLING Student Red_Dot Column")
+
+        stdrdColumn = searchList(re.compile(".*[rR]ed.*[dD]ots.*"), list(self.m_studentsResults.columns))[0]
+        neptun_code_col = searchList(re.compile(".*[Nn]eptun.*"), list(self.m_studentsResults.columns))[0]
+        
+        for stdInd, studentRow in self.m_studentsResults.iterrows():
+            neptun_code = studentRow[neptun_code_col]
+            logMessage("INFO", "_fill_red_dot_column", f"Processing Student red dots: {neptun_code} ...")
+            # Searching for the right teams sheet
+            (i, df) = searchTables(neptun_code, self.m_teams_dfs)
+            if( i == None):
+                logMessage("WARNGING", "_fill_red_dot_column", f"Student: {neptun_code} has no MS teams data.")
+                # raise Exception(f'No student with id: {neptun_code} is NOT found in the MS teams files...')
+                continue
+            gradeRow = df.loc[neptun_code]
+
+            # Processing the progress task score of the student.
+            red_dots_column = searchList(re.compile("^red.*dots.*", re.IGNORECASE), list(df.columns))
+            logMessage("INFO", "_fill_red_dot_column", f"{neptun_code}: Red Dot columns are:\n\t{red_dots_column}")
+            temp = str(list(gradeRow[red_dots_column]))
+            logMessage("INFO", "_fill_red_dot_column", f"{neptun_code}: Red Dot Results are:\n\t{temp}")
+
+            # Calculating the passed progress tasks.
+            dots = 0
+            for rd in red_dots_column:
+                dots += gradeRow[rd]
+            dots = dots * 10
+
+            logMessage("INFO", "_fill_red_dot_column", f"{neptun_code}: Red Dots : {dots}")
+            self.m_studentsResults.loc[stdInd][stdrdColumn] = dots
+        
+        print("---------------------------------- Done  ")
 
 
-    ''''''
+
+    '''
+    '''
     def _fill_homework_column(self):
         hw_score = 100
         stdHwColumn = searchList(re.compile(".*[Hh]omework.*"), list(self.m_studentsResults.columns))[0]
@@ -330,11 +368,28 @@ class FPCG_Engine(object):
         stdEndtermColumn    = searchList(re.compile(".*end.*term.*" , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdHomeworkColumn   = searchList(re.compile(".*homework.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdProgoressColumn  = searchList(re.compile(".*progress.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdRedDotsColumn    = searchList(re.compile(".*[rR]ed.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdNeptunColumn     = searchList(re.compile(".*neptun.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
 
         for stdInd, studentRow in self.m_studentsResults.iterrows():
             neptun_code = studentRow[stdNeptunColumn]
             logMessage("INFO", "_fill_final_grade_column", f"Processing Student: {neptun_code}.")
+            
+            
+            
+            temp  = 50 - studentRow[stdQuizColumn]
+            if(temp > 0):
+                transferPoints =  min(studentRow[stdRedDotsColumn], temp)
+                studentRow[stdQuizColumn] += transferPoints
+                studentRow[stdRedDotsColumn] = studentRow[stdQuizColumn]  - transferPoints
+            
+
+            temp  = 50 - studentRow[stdProgoressColumn]
+            if(temp > 0):
+                transferPoints =  min(studentRow[stdRedDotsColumn], temp)
+                studentRow[stdProgoressColumn] += transferPoints
+                studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn]  - transferPoints
+            
             
             failed = any ([
                 studentRow[stdQuizColumn]       < 50,
@@ -429,7 +484,8 @@ class FPCG_Engine(object):
             tsps[0],
             t_conf["columnAsId"], 
             t_conf["usecols"],
-            t_conf["renamePatterns"]
+            t_conf["renamePatterns"],
+            [1]
         )
         for path in tsps[1:]:
             df = df.append(
@@ -437,7 +493,8 @@ class FPCG_Engine(object):
                     path,
                     t_conf["columnAsId"], 
                     t_conf["usecols"],
-                    t_conf["renamePatterns"]
+                    t_conf["renamePatterns"],
+                    [1]
                 )   
             )
 
@@ -445,7 +502,7 @@ class FPCG_Engine(object):
 
 
 
-    def _load_canvas_lab_data(self):
+    def _load_canvas_lec_data(self):
         t_conf = self.m_configuration["CanvasLecConf"]
         tsps = t_conf["paths"]                               # <-> [string]:      Teams Sheet Paths
 
@@ -454,7 +511,8 @@ class FPCG_Engine(object):
             tsps[0],
             t_conf["columnAsId"], 
             t_conf["usecols"],
-            t_conf["renamePatterns"]
+            t_conf["renamePatterns"],
+            [1]
         )
         for path in tsps[1:]:
             df = df.append(
@@ -462,7 +520,8 @@ class FPCG_Engine(object):
                     path,
                     t_conf["columnAsId"], 
                     t_conf["usecols"],
-                    t_conf["renamePatterns"]
+                    t_conf["renamePatterns"],
+                    [1]
                 )   
             )
 

@@ -31,9 +31,9 @@ def loadDataframe(csvSheet, colAsId = None, usecols = [], renamePatterns = [], c
     
     # Loading the dataset from the file.
     if( 0 < len(usecols) and len(usecols) < pd.read_csv(csvSheet).shape[1] ): # Simple error checking for the used columns lengths
-        df = pd.read_csv(csvSheet, skiprows=[1], usecols=usecols)
+        df = pd.read_csv(csvSheet, skiprows=colsToDrop, usecols=usecols)
     else:
-        df = pd.read_csv(csvSheet, skiprows=[1])
+        df = pd.read_csv(csvSheet, skiprows=colsToDrop)
         
     # cleaning the dataset.
     for i, col in enumerate(df.columns):
