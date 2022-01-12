@@ -49,13 +49,13 @@ class FPCG_Engine(object):
 
     # -- Public: 
     def start(self):
-        self.m_teams_df = self._load_teams_data()
+        self.m_teams_dfs = self._load_teams_data()
         self.m_cvLab_df = self._load_canvas_lab_data()
         self.m_cvLec_df = self._load_canvas_lab_data()
 
     # -- Getters
-    def getTeamsData(self):
-        return self.m_teams_df
+    def getTeamsData(self, index):
+        return self.m_teams_dfs[index]
     def getCanvasLabData(self):
         return self.m_cvLab_df
     def getCanvasLecData(self):
@@ -75,8 +75,8 @@ class FPCG_Engine(object):
             ("Fullname", self._fill_name_column), 
             ("Theory Percentage", self._fill_theory_column),
             ("Passed Quizes Percentage", self._fill_quizes_column), 
-            ("Midterm Exam Percentage", None),
-            ("Endterm Exam Percentage", None),
+            ("Midterm Exam Percentage", self._fill_practice_exams_columns),
+            ("Endterm Exam Percentage", None), # loaded withen the midterm percentage initializer.
             ("Progress Tasks Percentage", None),
             ("Homeworks Percentage", None),
             ("Final Grade", None)
@@ -143,7 +143,6 @@ class FPCG_Engine(object):
 
 
     '''
-
     '''
     def _fill_quizes_column(self):
         # Getting the column names of the quizes data.
@@ -194,6 +193,54 @@ class FPCG_Engine(object):
 
 
 
+    ''''''
+    def _fill_practice_exams_columns(self):
+        # Get the table in which the student midterm, endterm grade are stored.
+        def _get_teams_index(neptun_code):
+            for index, df in enumerate(self.m_teams_dfs):
+                
+                if(neptun_code in df.index):
+                    return (index, df)
+            return (None, None)
+                
+        # Filling the students quizes data
+        neptun_code_col = searchList(re.compile(".*[Nn]eptun.*"), list(self.m_studentsResults.columns))[0]
+        stdMidtermColumn = searchList(re.compile(".*[Mm]id.*term.*"), list(self.m_studentsResults.columns))[0]
+        stdEndtermColumn = searchList(re.compile(".*[Ee]nd.*term.*"), list(self.m_studentsResults.columns))[0]
+
+        for stdInd, studentRow in self.m_studentsResults.iterrows():
+            neptun_code = studentRow[neptun_code_col]
+            logMessage("INFO", "_fill_practice_exams_columns", f"Processing Student: {neptun_code}...")
+            (i, df) = _get_teams_index(neptun_code)
+            
+            if( i == None):
+                logMessage("WARNGING", "_fill_practice_exams_columns", f"Student: {neptun_code} has no MS teams data.")
+            #     raise Exception(f'No student with id: {neptun_code} is NOT found in the MS teams files...')
+                continue
+            logMessage("INFO", "_fill_practice_exams_columns", f"Found Student Teams Dataframe: {neptun_code} Belongs to dataframe: {i}")
+            
+            midterm_columns = searchList(re.compile("^[Mm]id.*term.*"), list(df.columns))
+            midterm_scores = list(df.loc[neptun_code][midterm_columns])
+            bestMidterm = np.max(midterm_scores)
+            self.m_studentsResults.loc[stdInd][stdMidtermColumn] = bestMidterm
+
+            logMessage("INFO", "_fill_practice_exams_columns", f"Midterm columns are: {midterm_columns}")
+            logMessage("INFO", "_fill_practice_exams_columns", f"{neptun_code} midterm scores are: {midterm_scores}. Best Score: {bestMidterm}")
+
+            endterm_columns = searchList(re.compile("^[Ee]nd.*term.*"), list(df.columns))
+            endterm_scores = list(df.loc[neptun_code][endterm_columns])
+            bestEndterm = np.max(endterm_scores)
+            self.m_studentsResults.loc[stdInd][stdEndtermColumn] = bestEndterm
+
+            logMessage("INFO", "_fill_practice_exams_columns", f"Endterm columns are: {endterm_columns}")
+            logMessage("INFO", "_fill_practice_exams_columns", f"{neptun_code} endterm scores are: {endterm_scores}. Best Score: {bestEndterm}")
+            logMessage("INFO", "_fill_practice_exams_columns", f"Done processing: {neptun_code}")
+            
+
+
+            
+                
+
             
     
 
@@ -202,25 +249,26 @@ class FPCG_Engine(object):
     def _load_teams_data(self):
         t_conf = self.m_configuration["MSTeamsConf"]
         tsps = t_conf["paths"]                               # <-> [string]:      Teams Sheet Paths
+        teams_dfs = []
 
         # Loading the data of the teams dataframe and returns it.
-        teams_df = loadDataFrame_teams_ext(
+        teams_dfs = [loadDataFrame_teams_ext(
             tsps[0],
             t_conf["columnAsId"], 
             t_conf["usecols"],
             t_conf["renamePatterns"]
-        )
+        )]
         for path in tsps[1:]:
-            teams_df = teams_df.append(
+            teams_dfs = teams_dfs.append(
                 loadDataFrame_teams_ext(
                     path,
                     t_conf["columnAsId"], 
                     t_conf["usecols"],
                     t_conf["renamePatterns"]
-                )   
+                )
             )
 
-        return teams_df
+        return teams_dfs
 
 
 
