@@ -79,7 +79,7 @@ class FPCG_Engine(object):
             ("Endterm Exam Percentage", None), # loaded withen the midterm percentage initializer.
             ("Passed Progress Tasks Percentage",self._fill_progress_task_column),
             ("Homeworks Percentage", self._fill_homework_column),
-            ("Final Grade", None)
+            ("Final Grade", self._fill_final_grade_column)
         ]
 
         columnsNames = [ col[0] for col in studentColumns]
@@ -90,6 +90,11 @@ class FPCG_Engine(object):
                 initializer()
 
         printDetails(self.m_studentsResults)
+
+
+
+
+
 
 
 
@@ -312,6 +317,73 @@ class FPCG_Engine(object):
             self.m_studentsResults.loc[stdInd][stdHwColumn] = percentage 
 
                 
+
+    ''''''
+    def _fill_final_grade_column(self):
+        stdFinalColumn      = searchList(re.compile(".*final.*"     , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdQuizColumn       = searchList(re.compile(".*quiz.*"      , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdTheoryColumn     = searchList(re.compile(".*theory.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdMidtermColumn    = searchList(re.compile(".*mid.*term.*" , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdEndtermColumn    = searchList(re.compile(".*end.*term.*" , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdHomeworkColumn   = searchList(re.compile(".*homework.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdProgoressColumn  = searchList(re.compile(".*progress.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdNeptunColumn     = searchList(re.compile(".*neptun.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+
+        for stdInd, studentRow in self.m_studentsResults.iterrows():
+            neptun_code = studentRow[stdNeptunColumn]
+            logMessage("INFO", "_fill_final_grade_column", f"Processing Student: {neptun_code}.")
+            
+            failed = any ([
+                studentRow[stdQuizColumn]       < 50,
+                studentRow[stdTheoryColumn]     < 50,
+                studentRow[stdMidtermColumn]    < 50,
+                studentRow[stdEndtermColumn]    < 50,
+                studentRow[stdHomeworkColumn]   < 50, 
+                studentRow[stdProgoressColumn]  < 50, 
+            ])
+            
+            if(failed == True):
+                logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Failed the subject.")
+                self.m_studentsResults.loc[stdInd][stdFinalColumn] = 1
+                continue
+
+            score =  [
+                studentRow[stdTheoryColumn]     * 15,
+                studentRow[stdMidtermColumn]    * 35,
+                studentRow[stdEndtermColumn]    * 35,
+                studentRow[stdHomeworkColumn]   * 15
+            ]
+
+            logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Achieved scores in the columns: ")
+            logMessage("INFO", "_fill_final_grade_column", f" [Theory, Midterm, Endterm, Homeworks]")
+            logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: {score}")
+            
+            X = sum(score)
+            logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Final Accumalated grade: {X} out of 100")
+
+            if(X > 85):
+                logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Recieved 5 in the subject.")
+                self.m_studentsResults.loc[stdInd][stdFinalColumn] = 5
+                continue
+
+            if(X > 70):
+                logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Recieved 4 in the subject.")
+                self.m_studentsResults.loc[stdInd][stdFinalColumn] = 4
+                continue
+            if(X > 60):
+                logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Recieved 3 in the subject.")
+                self.m_studentsResults.loc[stdInd][stdFinalColumn] = 3
+                continue
+            if(X >= 50):
+                logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Recieved 2 in the subject.")
+                self.m_studentsResults.loc[stdInd][stdFinalColumn] = 2
+                continue
+            
+            logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Failed with 1 in the subject.")
+            self.m_studentsResults.loc[stdInd][stdFinalColumn] = 1
+
+            
+
 
 
 
