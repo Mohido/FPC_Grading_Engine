@@ -348,10 +348,10 @@ class FPCG_Engine(object):
                 continue
 
             score =  [
-                studentRow[stdTheoryColumn]     * 15,
-                studentRow[stdMidtermColumn]    * 35,
-                studentRow[stdEndtermColumn]    * 35,
-                studentRow[stdHomeworkColumn]   * 15
+                studentRow[stdTheoryColumn]     * 0.15,
+                studentRow[stdMidtermColumn]    * 0.35,
+                studentRow[stdEndtermColumn]    * 0.35,
+                studentRow[stdHomeworkColumn]   * 0.15
             ]
 
             logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Achieved scores in the columns: ")
