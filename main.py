@@ -38,8 +38,8 @@ lectureUseCols = [0,1,2] + [x for x in range(4,17)]
 
 # Canvas Lecture channel configuration.
 teamsSheetPaths = [ 
-    "res/FP Practice Gr 1. Monday 6.15-7.45 p.m. 00-524 marks - 12-01-2022, 11-22.csv",
-    "res/FP Practice Gr 2. Friday 12.15-1.45 p.m. 2-107 grades - 01-12-2022, 11-14 AM.csv",
+    "res/FP Practice Gr 1. Monday 6.15-7.45 p.m. 00-524 grades - 01-12-2022, 04-32 PM.csv",
+    # "res/FP Practice Gr 2. Friday 12.15-1.45 p.m. 2-107 grades - 01-12-2022, 11-14 AM.csv",
     "res/FP Practice Gr 3. Friday 2-3.30 p.m. 00-524 marks - 12-01-2022, 11-23.csv",
     "res/FP Practice Gr 5. Wed 8.30-10 a.m. 2-107 marks - 11-01-2022, 13-05.csv",
     "res/FP Practice Gr 6. Thursday 6-7.30 p.m. 00-524 marks - 12-01-2022, 11-23.csv",
@@ -62,9 +62,9 @@ teamsRenamePatterns = [
     (re.compile(".*progress.*task.*extra.*", re.IGNORECASE),    "Progress-task-extra-1"),
     (re.compile("Extra homework 2", re.IGNORECASE),             "Homework-extra-2"),
     (re.compile("Extra homework", re.IGNORECASE),               "Homework-extra-1"),
-    (re.compile("^Progress Task $", re.IGNORECASE),             "Progress-task-1"),
+    (re.compile("^Progress Task $", re.IGNORECASE),             "Progress-task-1")
     ] + [
-        (re.compile(".*red.*dots.*" + str(x) +"[a-z ]*$", re.IGNORECASE), "Red-dots-" + str(x)) for x in range(1,3)
+        (re.compile(".*[rR]ed.*[dD]ots.*" + str(x) +"[a-z ]*$", re.IGNORECASE), "Red-dots-" + str(x)) for x in range(0,5)
     ] + [
         (re.compile("^progress.*" + str(x) +"[a-z ]*$", re.IGNORECASE), "Progress-task-" + str(x)) for x in range(1,11)
     ] + [ 
@@ -121,4 +121,4 @@ print(df.shape)
 print("______________________________")
 
 
-#engine.run()
+engine.run()
