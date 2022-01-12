@@ -77,10 +77,12 @@ class FPCG_Engine(object):
             ("Red Dots", self._fill_red_dot_column),
             ("Passed Quizes Percentage", self._fill_quizes_column), 
             ("Midterm Exam Percentage", self._fill_practice_exams_columns),
-            ("Endterm Exam Percentage", None), # loaded withen the midterm percentage initializer.
+            ("Endterm Exam Percentage", None),                                      # loaded withen the midterm percentage initializer.
             ("Passed Progress Tasks Percentage",self._fill_progress_task_column),
             ("Homeworks Percentage", self._fill_homework_column),
-            ("Final Grade", self._fill_final_grade_column)
+            ("Final Grade", self._fill_final_grade_column),
+            ("Final Percentage", self._fill_final_grade_percentage_column),
+            
         ]
 
         columnsNames = [ col[0] for col in studentColumns]
@@ -274,6 +276,8 @@ class FPCG_Engine(object):
             logMessage("INFO", "_fill_progress_task_column", f"{neptun_code}: Passed Progress Tasks Percentage: {passed_tasks}%")
             self.m_studentsResults.loc[stdInd][stdPtColumn] = passed_tasks 
     
+
+
     '''
     '''
     def _fill_red_dot_column(self):
@@ -368,15 +372,27 @@ class FPCG_Engine(object):
         stdEndtermColumn    = searchList(re.compile(".*end.*term.*" , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdHomeworkColumn   = searchList(re.compile(".*homework.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdProgoressColumn  = searchList(re.compile(".*progress.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
-        stdRedDotsColumn    = searchList(re.compile(".*[rR]ed.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdRedDotsColumn    = searchList(re.compile(".*[rR]ed.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdNeptunColumn     = searchList(re.compile(".*neptun.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
 
         for stdInd, studentRow in self.m_studentsResults.iterrows():
             neptun_code = studentRow[stdNeptunColumn]
             logMessage("INFO", "_fill_final_grade_column", f"Processing Student: {neptun_code}.")
             
-            
-            
+            temp  = 50 - studentRow[stdQuizColumn]
+            if(temp > 0):
+                transferPoints =  min(studentRow[stdRedDotsColumn], temp)
+                studentRow[stdQuizColumn] += transferPoints
+                studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn]  - transferPoints
+
+
+            temp  = 50 - studentRow[stdProgoressColumn]
+            if(temp > 0):
+                transferPoints =  min(studentRow[stdRedDotsColumn], temp)
+                studentRow[stdProgoressColumn] += transferPoints
+                studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn]  - transferPoints
+
+                '''
             temp  = 50 - studentRow[stdQuizColumn]
             if(temp > 0):
                 transferPoints =  min(studentRow[stdRedDotsColumn], temp)
@@ -389,6 +405,7 @@ class FPCG_Engine(object):
                 transferPoints =  min(studentRow[stdRedDotsColumn], temp)
                 studentRow[stdProgoressColumn] += transferPoints
                 studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn]  - transferPoints
+                '''
             
             
             failed = any ([
@@ -400,6 +417,11 @@ class FPCG_Engine(object):
                 studentRow[stdProgoressColumn]  < 50, 
             ])
             
+            if(studentRow[stdMidtermColumn] == 0 or studentRow[stdEndtermColumn] == 0):
+                logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Student maybe did not attend the exam.")
+                self.m_studentsResults.loc[stdInd][stdFinalColumn] = -1
+                continue
+
             if(failed == True):
                 logMessage("INFO", "_fill_final_grade_column", f"{neptun_code}: Failed the subject.")
                 self.m_studentsResults.loc[stdInd][stdFinalColumn] = 1
@@ -443,7 +465,42 @@ class FPCG_Engine(object):
             
 
 
+    def _fill_final_grade_percentage_column(self):
+        stdPercentageColumn = searchList(re.compile("Final Percentage", re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdFinalColumn      = searchList(re.compile(".*final.*"     , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdQuizColumn       = searchList(re.compile(".*quiz.*"      , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdTheoryColumn     = searchList(re.compile(".*theory.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdMidtermColumn    = searchList(re.compile(".*mid.*term.*" , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdEndtermColumn    = searchList(re.compile(".*end.*term.*" , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdHomeworkColumn   = searchList(re.compile(".*homework.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdProgoressColumn  = searchList(re.compile(".*progress.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdRedDotsColumn    = searchList(re.compile(".*[rR]ed.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdNeptunColumn     = searchList(re.compile(".*neptun.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
 
+        for stdInd, studentRow in self.m_studentsResults.iterrows():
+            neptun_code = studentRow[stdNeptunColumn]
+            
+            temp  = 50 - studentRow[stdQuizColumn]
+            if(temp > 0):
+                transferPoints =  min(studentRow[stdRedDotsColumn], temp)
+                studentRow[stdQuizColumn] += transferPoints
+                studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn]  - transferPoints
+
+
+            temp  = 50 - studentRow[stdProgoressColumn]
+            if(temp > 0):
+                transferPoints =  min(studentRow[stdRedDotsColumn], temp)
+                studentRow[stdProgoressColumn] += transferPoints
+                studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn]  - transferPoints
+            
+            score =  [
+                studentRow[stdTheoryColumn]     * 0.15,
+                studentRow[stdMidtermColumn]    * 0.35,
+                studentRow[stdEndtermColumn]    * 0.35,
+                studentRow[stdHomeworkColumn]   * 0.15
+            ]
+
+            self.m_studentsResults.loc[stdInd][stdPercentageColumn] = sum(score)
 
 
 

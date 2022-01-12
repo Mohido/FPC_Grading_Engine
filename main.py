@@ -38,12 +38,13 @@ lectureUseCols = [0,1,2] + [x for x in range(4,17)]
 
 # Canvas Lecture channel configuration.
 teamsSheetPaths = [ 
-    "res/FP Practice Gr 1. Monday 6.15-7.45 p.m. 00-524 grades - 01-12-2022, 04-32 PM.csv",
-    # "res/FP Practice Gr 2. Friday 12.15-1.45 p.m. 2-107 grades - 01-12-2022, 11-14 AM.csv",
-    "res/FP Practice Gr 3. Friday 2-3.30 p.m. 00-524 marks - 12-01-2022, 11-23.csv",
-    "res/FP Practice Gr 5. Wed 8.30-10 a.m. 2-107 marks - 11-01-2022, 13-05.csv",
-    "res/FP Practice Gr 6. Thursday 6-7.30 p.m. 00-524 marks - 12-01-2022, 11-23.csv",
-    "res/FP Practice Gr 7. Wed 12-1.30 p.m. 2-107 marks - 12-01-2022, 11-24.csv"
+    "res/FP Practice Gr 1. Monday 6.15-7.45 p.m. 00-524 marks - 12-01-2022, 20-33.csv",
+    "res/FP Practice Gr 2. Friday 12.15-1.45 p.m. 2-107 marks - 12-01-2022, 20-34.csv",
+    "res/FP Practice Gr 3. Friday 2-3.30 p.m. 00-524 marks - 12-01-2022, 20-34.csv",
+    "res/FP Practice Gr 4. Friday 3.45-5.15 p.m. 00-524 marks - 12-01-2022, 20-34.csv",
+    "res/FP Practice Gr 5. Wed 8.30-10 a.m. 2-107 marks - 12-01-2022, 20-35.csv",
+    "res/FP Practice Gr 6. Thursday 6-7.30 p.m. 00-524 marks - 12-01-2022, 20-35.csv",
+    "res/FP Practice Gr 7. Wed 12-1.30 p.m. 2-107 marks - 12-01-2022, 20-35.csv",
 ]
 teamsRenamePatterns = [
     (re.compile(".*mid.*term.*retake", re.IGNORECASE),          "Mid-term-retake"),
