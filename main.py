@@ -50,14 +50,14 @@ conf = {
         "paths"  :               cSheetsPathsPrs,             
         "renamePatterns":        renamePatterns, 
         "usecols" :              [0,1,2,4],
-        "columnAsId":            "ID"     
+        "columnAsId":            "ID"     # Both the canvas ones should have this Canvas ID which refer to the students.
     },
 
     "CanvasLecConf" : {                
         "paths"  :               cSheetPathsLts,             
         "renamePatterns":        lectureRenamePatterns, 
         "usecols" :              lectureUseCols,
-        "columnAsId":            "ID"     
+        "columnAsId":            "ID"     # This should be in the lab channel as well.
     },
 }
 
@@ -77,3 +77,6 @@ print(df.describe())
 print("______________________________")
 print(df.shape)
 print("______________________________")
+
+
+engine.run()

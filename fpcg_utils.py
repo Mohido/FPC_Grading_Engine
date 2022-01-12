@@ -70,3 +70,34 @@ def loadDataFrame_teams_ext(csvSheet, colAsId, colsToKeep = [], renamePatterns =
         return df
     df = df[df.columns.drop(list(df.filter(regex='Feedback.*')))]
     return df
+
+
+'''
+'''
+def searchList(pattern, columns):
+    result = []
+    for i, element in enumerate(columns):
+        if re.match(pattern, element):
+            result.append(columns[i])
+    return result
+
+
+
+def printDetails(dataframe):
+    print("--------- Head --------------------")
+    print(dataframe.head())
+    print("---------------------------------- ")
+    print("--------- info --------------------")
+    print(dataframe.info())
+    print("---------------------------------- ")
+    print("--------- describe --------------------")
+    print(dataframe.describe())
+    print("---------------------------------- ")
+    print("--------- Maximums: Strings output are irrelevant. --------------------")
+    print(dataframe.max())
+    print("---------------------------------- ")
+
+
+def logMessage(mtype, functionName, message):
+    print("[%s]: [%s]: %s"  %(mtype, functionName, message) )
+    pass
