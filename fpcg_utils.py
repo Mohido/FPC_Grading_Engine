@@ -107,3 +107,13 @@ def printDetails(dataframe):
 def logMessage(mtype, functionName, message):
     print("[%s]: [%s]: %s"  %(mtype, functionName, message) )
     pass
+
+
+
+
+# Get the table in which the student midterm, endterm grade are stored.
+def searchTables(id, dataframes):
+    for index, df in enumerate(dataframes):
+        if(id in df.index):
+            return (index, df)
+    return (None, None)
