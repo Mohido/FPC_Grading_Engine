@@ -56,8 +56,8 @@ teamsRenamePatterns = [
     (re.compile(".*red.*dots$", re.IGNORECASE),                 "Red-dots-0"),
     (re.compile("^additional hw 1", re.IGNORECASE),             "Homework-extra-1"),
     (re.compile("^extra2", re.IGNORECASE),                      "Homework-extra-2"),
-    (re.compile("^homework.*11", re.IGNORECASE),                "Homework-extra-1"),
-    (re.compile("^homework.*12", re.IGNORECASE),                "Homework-extra-2"),
+    (re.compile("^home.*work.*11", re.IGNORECASE),                "Homework-extra-1"),
+    (re.compile("^home.*work.*12", re.IGNORECASE),                "Homework-extra-2"),
     (re.compile("^extra.*progress.*task.*", re.IGNORECASE),     "Progress-task-extra-1"),
     (re.compile("^exrtra.*progress.*task.*", re.IGNORECASE),    "Progress-task-extra-1"),
     (re.compile(".*progress.*task.*extra.*", re.IGNORECASE),    "Progress-task-extra-1"),
@@ -69,7 +69,7 @@ teamsRenamePatterns = [
     ] + [
         (re.compile("^progress.*" + str(x) +"[a-z ]*$", re.IGNORECASE), "Progress-task-" + str(x)) for x in range(1,11)
     ] + [ 
-        (re.compile("homework.*" + str(x) +"[a-z ]*$", re.IGNORECASE), "Homework-" + str(x)) for x in range(1,11)
+        (re.compile("home.*work.*" + str(x) +"[a-z ]*$", re.IGNORECASE), "Homework-" + str(x)) for x in range(1,11)
     ]
 teamsUseCols = []
 

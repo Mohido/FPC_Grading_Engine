@@ -75,7 +75,9 @@ class FPCG_Engine(object):
             ("Fullname", self._fill_name_column), 
             ("Theory Percentage", self._fill_theory_column),
             ("Red Dots", self._fill_red_dot_column),
+            ("Quizes Raw Sum", None),                       # is done through the _fill_quizes_column
             ("Passed Quizes Percentage", self._fill_quizes_column), 
+            ("Quizes Precondition Aplicable", None),        # is done through the _fill_quizes_column
             ("Midterm Exam Percentage", self._fill_practice_exams_columns),
             ("Endterm Exam Percentage", None),                                      # loaded withen the midterm percentage initializer.
             ("Passed Progress Tasks Percentage",self._fill_progress_task_column),
@@ -93,7 +95,7 @@ class FPCG_Engine(object):
                 initializer()
 
         printDetails(self.m_studentsResults)
-        self.m_studentsResults.to_csv("./output/result.csv")
+        self.m_studentsResults.to_csv("./output/result_d.csv")
 
 
 
@@ -152,7 +154,9 @@ class FPCG_Engine(object):
     def _fill_quizes_column(self):
         # Getting the column names of the quizes data.
         miniQuizColumns = searchList(re.compile("^[Qq]uiz.*"), list(self.m_cvLec_df.columns))
-        stdQuizesColumnName = searchList(re.compile(".*[Qq]uizes.*"), list(self.m_studentsResults.columns))[0]
+        stdQuizesColumnName = searchList(re.compile(".*[Qq]uizes.*[Pp]ercentage"), list(self.m_studentsResults.columns))[0]
+        stdQuizesSumColumnName = searchList(re.compile(".*[Qq]uizes.*[Ss]um"), list(self.m_studentsResults.columns))[0]
+        stdQuizesPreconditionColumnName = searchList(re.compile(".*[Qq]uizes.*[Pp]recondition"), list(self.m_studentsResults.columns))[0]
 
         # the extra quiz index. It is a replacable quiz.
         extraQuizIndex = len(miniQuizColumns) - 1
@@ -187,10 +191,21 @@ class FPCG_Engine(object):
             logMessage("INFO", "_fill_quizes_column", "Final Scores Data: Canvas ID: " + str(stdInd) + ", Student Quizes Score: " + str(studentScores) +",  Leftover Extra Quiz Score " + str(currentExtraScore))
             logMessage("INFO", "_fill_quizes_column", "Done filling missing quizes.")
             logMessage("INFO", "_fill_quizes_column", "Starting calculating the Quiz score.")
-            # calculating the sum of the quizes. in percentage.
+
+            studentScores = list(lecRow[miniQuizColumns])     
+            # calculating the sum of the quizes.
+            quizeRawSum = sum(studentScores)
+            logMessage("INFO", "_fill_quizes_column", f"{stdInd}: Raw Sum of quizes is: {quizeRawSum}")
+            self.m_studentsResults.loc[stdInd][stdQuizesSumColumnName] = quizeRawSum
+
+            # Caculating the student precondition column
+            preconditionPassed = quizeRawSum >= 25
+            logMessage("INFO", "_fill_quizes_column", f"{stdInd}: is Precondtion passed?: {preconditionPassed}")
+            self.m_studentsResults.loc[stdInd][stdQuizesPreconditionColumnName] = int(preconditionPassed)
+
+            # Calculating the passed grade.
             minimumPassingScorePerQuiz = 3
             passed_quizes = [ s for s in studentScores if s >= minimumPassingScorePerQuiz]
-            
             self.m_studentsResults.loc[stdInd][stdQuizesColumnName] = (len(passed_quizes) / len(studentScores)) * 100
             logMessage("INFO", "_fill_quizes_column", "Done calculating the Quiz score.")
             logMessage("INFO", "_fill_quizes_column", "Conclusion: Student Passed Quizes Percentage: "+ str(self.m_studentsResults.loc[stdInd][stdQuizesColumnName]))
@@ -270,7 +285,7 @@ class FPCG_Engine(object):
             for pt_col in progress_tasks_columns:
                 ratio = (gradeRow[pt_col] / per_progress_score)
                 if ratio > progress_task_passing_ratio / 100:
-                    passed_tasks += int(ratio)
+                    passed_tasks += round(ratio)
             passed_tasks = min(passed_tasks, 10) * 10    # Clamping to 10 tasks maximum.
 
             logMessage("INFO", "_fill_progress_task_column", f"{neptun_code}: Passed Progress Tasks Percentage: {passed_tasks}%")
@@ -374,16 +389,19 @@ class FPCG_Engine(object):
         stdProgoressColumn  = searchList(re.compile(".*progress.*"  , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdRedDotsColumn    = searchList(re.compile(".*[rR]ed.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
         stdNeptunColumn     = searchList(re.compile(".*neptun.*"    , re.IGNORECASE), list(self.m_studentsResults.columns))[0]
+        stdQuizesSumColumnName = searchList(re.compile(".*[Qq]uizes.*[Ss]um"), list(self.m_studentsResults.columns))[0]
+        stdQuizesPreconditionColumnName = searchList(re.compile(".*[Qq]uizes.*[Pp]recondition"), list(self.m_studentsResults.columns))[0]
 
         for stdInd, studentRow in self.m_studentsResults.iterrows():
             neptun_code = studentRow[stdNeptunColumn]
             logMessage("INFO", "_fill_final_grade_column", f"Processing Student: {neptun_code}.")
             
-            temp  = 50 - studentRow[stdQuizColumn]
+            temp  = 25 - studentRow[stdQuizesSumColumnName]
+            reddots = studentRow[stdRedDotsColumn]/10
             if(temp > 0):
-                transferPoints =  min(studentRow[stdRedDotsColumn], temp)
-                studentRow[stdQuizColumn] += transferPoints
-                studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn]  - transferPoints
+                transferPoints =  min(reddots, temp)
+                studentRow[stdQuizesSumColumnName] += transferPoints
+                studentRow[stdRedDotsColumn] = studentRow[stdRedDotsColumn] - transferPoints*10
 
 
             temp  = 50 - studentRow[stdProgoressColumn]
@@ -409,12 +427,12 @@ class FPCG_Engine(object):
             
             
             failed = any ([
-                studentRow[stdQuizColumn]       < 50,
-                studentRow[stdTheoryColumn]     < 50,
-                studentRow[stdMidtermColumn]    < 50,
-                studentRow[stdEndtermColumn]    < 50,
-                studentRow[stdHomeworkColumn]   < 50, 
-                studentRow[stdProgoressColumn]  < 50, 
+                studentRow[stdQuizesSumColumnName]          < 25,
+                studentRow[stdTheoryColumn]                 < 50,
+                studentRow[stdMidtermColumn]                < 50,
+                studentRow[stdEndtermColumn]                < 50,
+                studentRow[stdHomeworkColumn]               < 50, 
+                studentRow[stdProgoressColumn]              < 50, 
             ])
             
             if(studentRow[stdMidtermColumn] == 0 or studentRow[stdEndtermColumn] == 0):
