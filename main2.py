@@ -3,8 +3,8 @@ import re
 
 
 
-def callback_1(row):
-    print(row)
+def callback_1(rowIDs, row_data):
+    print(rowIDs[0], row_data)
     return 1
 
 configurations = [
@@ -14,9 +14,9 @@ configurations = [
         "rowIDs" : ["neptun-code", "Student"],
         "evaluations" : [
             {
-                "name" : "eval_1",
+                "name" : "quiz-score",
                 "nullfilter": True,
-                "columns" : [re.compile(".*[qQ]uiz.*")],
+                "columns" : [re.compile("^[qQ]uiz.*")],
                 "callback": callback_1
             }
         ]

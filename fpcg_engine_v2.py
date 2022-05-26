@@ -22,20 +22,12 @@ class FPCG_Engine(object):
         for ci, configuration in enumerate(configurations):
             table = self._load_configuration_data(configuration)     # Loading the CSV file
             table = self._pre_process_data(table, configuration)     # Renaming, Setting RowID
-            print(table.info())
-            print(table.head(5))
+
             # Process the data
-            result_table = self._create_result_table(configuration)  # Creates an empty result table (Only id column is defined)
-            print("--------------------------")
-            print(result_table.info())
-            print(result_table.head(5))
-            print("--------------------------")
-
-            for ei, evaluation in enumerate(configuration.evaluations):
-                evaluation_results = _process(table, configuration, ei)     # Returns a list of the evaluation results object
-                
-
-                # TODO: Add the evaluation result to the table as a column
+            result_table = self._create_result_table(configuration)  # Creates an empty result table (Only columns names are defined)
+            for ei, evaluation in enumerate(configuration["evaluations"]):
+                result_table = self._process(table, configuration, evaluation, result_table)     # Returns a list of the evaluation results object
+            print(result_table)
 
 
 
@@ -75,3 +67,33 @@ class FPCG_Engine(object):
         table.set_index(configuration["rowIDs"], inplace=True, verify_integrity=True)               # Setting the index
         return table
         
+
+    '''
+        Process the data according to the given evaluation.
+    '''
+    def _process(self, table, configuration, evaluation, result_table):
+        # Get the columns matching the pattern
+        desired_columns = []
+        for eval_col in evaluation["columns"]:
+            print(eval_col)
+            for table_col in table.columns:
+                if re.match(eval_col, table_col):
+                    desired_columns.append(table_col)
+        desired_columns = list(set(desired_columns)) # Removing duplications
+        
+        # Create a new table with desired columns to process, and the indices
+        temp = table.loc[:, desired_columns]                                                        # Extract the desired columns to process
+        indices = temp.index.to_frame().dropna().index if evaluation["nullfilter"] else temp.index  # Filter out null indices
+        
+        # Loop through the rows and extract the desired columns
+        for rowID in indices:
+            row_data = temp.loc[rowID, :].dropna() if evaluation["nullfilter"] else temp.loc[rowID, :]
+            if(len(row_data) == 0):
+                continue
+            data = [ (row_data.index[x], row_data[x])  for x in range(0, len(row_data))]                 # [(index, [values])]
+            result_table.loc[rowID, evaluation["name"]] = evaluation["callback"](list(rowID), data)      # Evaluate and store it in its entry      
+        return result_table
+
+
+
+
