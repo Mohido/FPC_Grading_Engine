@@ -19,6 +19,7 @@ class FPCG_Engine(object):
 
         print("Processing the Configurations: ")
         # Run the engine on the configurations
+        tables = []
         for ci, configuration in enumerate(configurations):
             table = self._load_configuration_data(configuration)     # Loading the CSV file
             table = self._pre_process_data(table, configuration)     # Renaming, Setting RowID
@@ -27,7 +28,8 @@ class FPCG_Engine(object):
             result_table = self._create_result_table(configuration)  # Creates an empty result table (Only columns names are defined)
             for ei, evaluation in enumerate(configuration["evaluations"]):
                 result_table = self._process(table, configuration, evaluation, result_table)     # Returns a list of the evaluation results object
-            print(result_table)
+            tables.append(result_table)
+        return tables
 
 
 
@@ -75,7 +77,6 @@ class FPCG_Engine(object):
         # Get the columns matching the pattern
         desired_columns = []
         for eval_col in evaluation["columns"]:
-            print(eval_col)
             for table_col in table.columns:
                 if re.match(eval_col, table_col):
                     desired_columns.append(table_col)
