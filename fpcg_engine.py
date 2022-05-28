@@ -22,7 +22,6 @@ class FPCG_Engine(object):
         tables = []
         for ci, configuration in enumerate(configurations):
             table = self._load_configuration_data(configuration)     # Loading the CSV file
-            table = self._pre_process_data(table, configuration)     # Renaming, Setting RowID
 
             # Process the data
             result_table = self._create_result_table(configuration)  # Creates an empty result table (Only columns names are defined)
@@ -32,20 +31,20 @@ class FPCG_Engine(object):
         return tables
 
 
-
     '''
-        Loads the data in a given configuration into a pandas dataframe.
+        Loads the data of a given configuration into a pandas dataframe. It loads the csv file and returns it.
     '''
     def _load_configuration_data(self, configuration):
         table = pd.DataFrame()
         for pi, path in enumerate(configuration['paths']):
             df = pd.read_csv(path, index_col=False)
-            table = pd.concat([table, df], copy=False)
+            df = self._pre_process_data(df, configuration)     # Renaming columns, and setting RowID
+            table = pd.concat([table, df], verify_integrity=True)
         return table
 
 
     '''
-        Pre-Process the table. It renames the columns, set the RowIDs
+        Pre-Process the table. It renames the columns, and set the RowIDs
     '''
     def _pre_process_data(self, table, configuration):
         # Renaming Table columns
@@ -61,7 +60,7 @@ class FPCG_Engine(object):
 
     '''
         Creates an empty table suitable for the configuration. 
-        This function creates a template empty table holding the indices and empty evaluation results.
+        This function creates a template empty table holding the indices and the columns.
     '''
     def _create_result_table(self, configuration):
         cols = configuration["rowIDs"] + [eval["name"] for eval in configuration["evaluations"]]    # Columns of the empty table
@@ -71,7 +70,7 @@ class FPCG_Engine(object):
         
 
     '''
-        Process the data according to the given evaluation.
+        Process the data according to the given evaluation object and fills the result_table and returns it.
     '''
     def _process(self, table, configuration, evaluation, result_table):
         # Get the columns matching the pattern
