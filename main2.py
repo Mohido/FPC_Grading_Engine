@@ -16,7 +16,7 @@ def final_grade(IDs, row_data):
 
     print(theory_perc,prog_perc, home_perc, quiz_pass,  pt_pass)
 
-    # Check if data are null (Havenot attended)
+    # Check if data are null (Have not attended)
     if(len(mid_score) <= 0 or len(end_score) <= 0 or len(theory_perc) <= 0 or len(prog_perc) <= 0 or len(home_perc) <= 0 or len(quiz_pass) <= 0 or len(pt_pass) <= 0):
         return 
 
@@ -26,6 +26,7 @@ def final_grade(IDs, row_data):
 
    # Calculate grade
     final = theory_perc[0] + prog_perc[0] + home_perc[0] 
+    print(str(row_data) + str(final) )
     if (final > 85 ):
         return (5, final)
     elif(final > 70 ):
