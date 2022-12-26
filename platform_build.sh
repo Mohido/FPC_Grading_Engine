@@ -1,5 +1,11 @@
 #! /bin/sh
 
+echo "Creating FPC_ENGINE API Docker Image...";
+cd API && docker build . -t fpc_api:latest && cd ..;
+
+echo "\n++++++++++++++++++++++++++++\n";
+
+
 echo "Creating Visualizer Docker Image...";
 cd UI && docker build . -t fpc_ui:latest && cd ..;
 

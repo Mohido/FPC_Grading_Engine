@@ -5,3 +5,9 @@ services:
         ports:
             - 50000:50000
         command: ["node", "server.js"]
+
+    fpc_api:
+        image: fpc_api:latest
+        ports:
+            - 50001:50001
+        command: ["python3", "server.py"]
