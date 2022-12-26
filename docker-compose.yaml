@@ -1,0 +1,13 @@
+version: '3.3'
+services:
+    fpc_ui:
+        image: fpc_ui:latest
+        ports:
+            - 50000:50000
+        command: ["node", "server.js"]
+
+    fpc_api:
+        image: fpc_api:latest
+        ports:
+            - 50001:50001
+        command: ["python3", "server.py"]

@@ -1,0 +1,32 @@
+{
+    "name": "Functional Programming Grading Engine",
+    "version": "1.0.0",
+    "description": "Displays a webpage which helps the users in creating the configuration for the FPC_Grading_Engine",
+    "main": "server.js",
+    "scripts": {
+      "start": "node server.js"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Mohido/FPC_Grading_Engine.git"
+    },
+    "keywords": [
+      "Pandas",
+      "Grading",
+      "Functional",
+      "CSV",
+      "csv"
+    ],
+    "author": "Mohido",
+    "license": "GPL-3.0",
+    "bugs": {
+      "url": "https://github.com/Mohido/FPC_Grading_Engine/issues"
+    },
+    "homepage": "https://github.com/Mohido/FPC_Grading_Engine",
+    "dependencies": {
+      "ejs": "^3.1.8",
+      "express": "^4.18.1",
+      "axios": "0.27.2",
+      "body-parser": "1.20.0"
+    }
+  }
